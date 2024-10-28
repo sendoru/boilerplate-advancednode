@@ -9,12 +9,13 @@ const bcrypt = require('bcrypt');
 
 const myDB = require('./connection');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
-const routes = require('./routes.js');
 const auth = require('./auth.js');
 const routes = require('./routes.js');
 
-
 const app = express();
+
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 
 
 fccTesting(app); //For FCC testing purposes
@@ -32,8 +33,10 @@ app.use(session({
 
 myDB(async client => {
   const myDataBase = await client.db('database').collection('users');
-  routes(app, myDataBase);
+  // console.log("DB connected");
   auth(app, myDataBase);
+  routes(app, myDataBase);
+
 
   // Be sure to add this...
 }).catch(e => {
@@ -43,8 +46,15 @@ myDB(async client => {
 });
 
 
+let currentUsers = 0;
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+http.listen(PORT, () => {
   console.log('Listening on port ' + PORT);
 });
+
+io.on('connection', (socket) => {
+  console.log('A user has connected');
+  currentUsers++;
+  io.emit('user count', currentUsers);
+})

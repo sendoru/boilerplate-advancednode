@@ -7,3 +7,9 @@ $(document).ready(function () {
     return false; // prevent form submit from refreshing page
   });
 });
+/*global io*/
+let socket = io();
+
+socket.on('user count', (data) => {
+  console.log(data);
+});
