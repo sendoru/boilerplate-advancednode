@@ -6,6 +6,8 @@ const { ObjectID } = require('mongodb');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const bcrypt = require('bcrypt');
+const req = require('express/lib/request');
+const salt = bcrypt.genSaltSync(12);
 const ensureAuthenticated = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
@@ -19,6 +21,7 @@ module.exports = function (app, myDataBase) {
     res.render('index', {
       showLogin: true,
       showRegistration: true,
+      showSocialAuth: true,
       title: 'Connected to Database',
       message: 'Please log in'
     });
@@ -56,7 +59,7 @@ module.exports = function (app, myDataBase) {
         else {
           myDataBase.insertOne({
             username: req.body.username,
-            password: bcrypt.hashSync(req.body.password, process.env.SESSION_SECRET)
+            password: bcrypt.hashSync(req.body.password, salt)
           },
             (err, doc) => {
               if (err) {
@@ -73,9 +76,22 @@ module.exports = function (app, myDataBase) {
     (req, res, next) => {
       res.redirect('/profile');
     }
+  );
 
-  )
+  app.route('/auth/github').get(
+    // () => { console.log('github login detected') },
+    passport.authenticate('github')
+  );
 
+  app.route('/auth/github/callback').get(
+    passport.authenticate('github', {
+      failureRedirect: '/'
+    }),
+    (req, res) => {
+      req.session.user_id = req.user.id;
+      res.redirect('/profile');
+    }
+  );
 
   app.use((req, res, next) => {
     res.status(404)
