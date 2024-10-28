@@ -11,5 +11,5 @@ $(document).ready(function () {
 let socket = io();
 
 socket.on('user count', (data) => {
-  console.log(data);
+  console.log('User count: ', data);
 });
