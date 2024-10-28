@@ -86,12 +86,15 @@ io.use(
 );
 
 io.on('connection', (socket) => {
+  console.log('A user has connected');
   currentUsers++;
+
   io.emit('user', {
     username: socket.request.user.username,
     currentUsers,
     connected: true
   });
+
   socket.on('disconnect', () => {
     currentUsers--;
     io.emit('user', {
@@ -101,5 +104,12 @@ io.on('connection', (socket) => {
     });
     console.log('A user has disconnected');
   });
-  console.log('A user has connected');
-})
+
+  socket.on('chat message', (message) => {
+    io.emit('chat message', {
+      username: socket.request.user.username,
+      message
+    });
+  });
+
+});
